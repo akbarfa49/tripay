@@ -67,7 +67,7 @@ type Tripay struct {
 
 type Environment int
 
-func New(ApiKey, PrivateKey, MerchantCode,MerchantName string, environment Environment) *Tripay {
+func New(ApiKey, PrivateKey, MerchantCode string, environment Environment) *Tripay {
 	host := ""
 	switch environment{
 	case Development:
@@ -75,7 +75,7 @@ func New(ApiKey, PrivateKey, MerchantCode,MerchantName string, environment Envir
 	case Production:
 		host = "https://tripay.co.id/api"
 	}
-	return &Tripay{ApiKey: []byte("Bearer "+ApiKey), PrivateKey: PrivateKey, Host: host,f: &fasthttp.Client{}, MerchantCode: MerchantCode, MerchantName: MerchantName}
+	return &Tripay{ApiKey: []byte("Bearer "+ApiKey), PrivateKey: PrivateKey, Host: host,f: &fasthttp.Client{}, MerchantCode: MerchantCode}
 }
 
 /*SetHttpClient used for set fasthttp.Client
