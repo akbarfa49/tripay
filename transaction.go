@@ -21,7 +21,7 @@ type PaymentType int
 type RequestTransaction struct {
 	MerchantRef string `json:"merchant_ref,omitempty"`
 
-	Method PaymentChannelCode `json:"method,omitempty"`
+	PaymentMethod PaymentChannelCode `json:"method,omitempty"`
 
 	CustomerName  string `json:"customer_name,omitempty"`
 	CustomerEmail string `json:"customer_email,omitempty"`
@@ -39,16 +39,77 @@ type RequestTransaction struct {
 	Signature   string `json:"signature"`
 }
 
+type OpenTransactionResponse struct{
+	Success bool `json:"success"`
+	Message string `json:"message"`
+	Data struct{
+		Uuid string `json:"uuid"`
+		MerchantRef string `json:"merchant_ref"`
+		CustomerName string `json:"customer_name"`
+		PaymentName string `json:"payment_name"`
+		PaymentMethod PaymentChannelCode `json:"payment_method"`
+		PayCode string `json:"pay_code"`
+		QrString string `json:"qr_string"`
+		QrUrl string `json:"qr_url"`
+	}`json:"data,omitempty"`
+}
+
+type OpenTransactionListResponse struct{
+	Success bool `json:"success"`
+	Message string `json:"message"`
+	Data []struct{
+		Reference string `json:"reference"`
+		MerchantRef string `json:"merchant_ref"`
+
+		//same like payment channel code
+		PaymentMethod PaymentChannelCode `json:"payment_method"`
+		PaymentName string `json:"payment_name"`
+
+		CustomerName string `json:"customer_name"`
+		Amount int `json:"amount"`
+		MerchantFee interface{} `json:"fee_merchant"`
+		CustomerFee interface{} `json:"fee_customer"`
+		TotalFee interface{} `json:"total_fee"`
+		AmountReceived int `json:"amount_received"`
+		CheckoutUrl string `json:"checkout_url"`
+		Status string `json:"status"`
+		PaidAt int `json:"paid_at"`
+	} `json:"data,omitempty"`
+
+	Pagination struct{
+		From int `json:"data_from"`
+		To int `json:"data_to"`
+		CurrentPage int `json:"current_page"`
+		//null json data will converted to 0
+		NextPage int `json:"next_page"`
+		LastPage int `json:"last_page"`
+		PerPage int `json:"per_page"`
+		TotalRecords int `json:"total"`
+	}
+}
+
+type RequestOpenTransactionList struct{
+	Reference string `json:"reference,omitempty"`
+	MerchantRef string `json:"merchant_ref,omitempty"`
+	
+	//Date Format Y-m-d H:i:s
+	StartDate string `json:"start_date,omitempty"`
+	EndDate string `json:"end_date,omitempty"`
+	
+	//default:25, max 100
+	PerPage int `json:"per_page,omitempty"`
+}
+
 type ClosedTransactionResponse struct{
 		Success bool `json:"success"`
-		Message string `json:"Message"`
+		Message string `json:"message"`
 		Data struct{
 			Reference string `json:"reference"`
 			MerchantRef string `json:"merchant_ref"`
 			PaymentType string `json:"payment_selection_type"`
 	
 			//same like payment channel code
-			PaymentMethod string `json:"payment_method"`
+			PaymentMethod PaymentChannelCode `json:"payment_method"`
 			PaymentName string `json:"payment_name"`
 			CustomerName string `json:"customer_name"`
 			CustomerEmail string `json:"customer_email"`
@@ -111,7 +172,7 @@ type ClosedTransactionResponse struct{
 				Title string `json:"title,omitempty"`
 				Steps string `json:"steps,omitempty"`
 			} `json:"instructions,omitempty"`*/
-		} `json:"data"`	
+		} `json:"data,omitempty"`	
 	}
 
 type Item struct{
@@ -162,10 +223,15 @@ func (t *Tripay) ClosedTransactionDetails(reference string) ([]byte, error){
 	return res.Body(), nil
 }
 
-//this will be continued once i get production API
+/*RequestOpenTransaction used to create transaction for Open Payment
+Data must be filled:
+RequestTransaction.PaymentMethod
+RequestTransaction.CustomerName
+RequestTransaction.MerchantRef
+*/
 func (t *Tripay) RequestOpenTransaction(transaction RequestTransaction) ([]byte,error){
 	h := hmac.New(sha256.New, []byte(t.PrivateKey))
-	h.Write([]byte(t.MerchantCode+transaction.MerchantRef+strconv.Itoa(transaction.Amount)))
+	h.Write([]byte(t.MerchantCode+string(transaction.PaymentMethod)+transaction.MerchantRef))
 	transaction.Signature = hex.EncodeToString(h.Sum(nil))
 	b, err :=json.Marshal(&transaction)
 	if err != nil{
@@ -187,3 +253,36 @@ func (t *Tripay) RequestOpenTransaction(transaction RequestTransaction) ([]byte,
 	return res.Body(), nil
 }
 
+func (t *Tripay) OpenTransactionDetails(uuid string) ([]byte,error){
+	uri := []byte(t.Host+"/open-payment/"+uuid+"/detail")
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
+	res := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(res)
+	req.SetRequestURIBytes(uri)
+	req.Header.AddBytesV("Authorization", t.ApiKey)
+	if err := t.f.Do(req, res); err != nil {
+		return nil,err
+	}
+	return res.Body(), nil
+}
+
+func (t *Tripay) RequestOpenTransactionList(uuid string,transaction RequestOpenTransactionList) ([]byte,error){
+	uri := []byte(t.Host+"/open-payment/"+uuid+"/transactions")
+	req := fasthttp.AcquireRequest()
+	if transaction.PerPage == 0{
+		transaction.PerPage = 25
+	}
+	b, _ := json.Marshal(&transaction)
+	defer fasthttp.ReleaseRequest(req)
+	res := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(res)
+	req.AppendBody(b)
+	req.Header.SetContentType("application/json")
+	req.SetRequestURIBytes(uri)
+	req.Header.AddBytesV("Authorization", t.ApiKey)
+	if err := t.f.Do(req, res); err != nil {
+		return nil,err
+	}
+	return res.Body(), nil
+}

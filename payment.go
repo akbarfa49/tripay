@@ -15,7 +15,7 @@ type BasePayment struct {
 
 type Instruction struct {
 	// code is the code of payment channel name *the Value must be UPPER*. ex: BRIVA (important)
-	Code       string `json:"code"  query:"code"`
+	PaymentMethod  PaymentChannelCode `json:"code"  query:"code"`
 		
 	// pay_code is payment code retrieved from tripay
 	PayCode    string `json:"pay_code,omitempty"  query:"pay_code,omitempty"`
@@ -34,11 +34,11 @@ type Instruction struct {
 
 type InstructionResponse struct{
 	Success bool `json:"success"`
-	Message string `json:"Message"`
+	Message string `json:"message"`
 	Data []struct{
 		Title string `json:"title"`
 		Steps []string `json:"steps"`
-	} `json:"Data"`
+	} `json:"data,omitempty"`
 }
 
 /*

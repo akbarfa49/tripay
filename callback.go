@@ -10,7 +10,7 @@ import (
 type Callback struct {
 	Reference      string `json:"reference"`
 	MerchantRef    string `json:"merchant_ref"`
-	PaymentMethod  string `json:"payment_method_code"`
+	PaymentMethod  PaymentChannelCode `json:"payment_method_code"`
 	PaymentName    string `json:"payment_method"`
 	CustomerName   string `json:"customer_name"`
 	CustomerEmail  string `json:"customer_email"`

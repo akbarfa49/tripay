@@ -7,17 +7,17 @@ import (
 
 type ChannelResponse struct{
 	Success bool `json:"success"`
-	Message string `json:"Message"`
+	Message string `json:"message"`
 	Data []struct{
 		Group string `json:"group"`
-		Code string `json:"code"`
+		PaymentMethod PaymentChannelCode `json:"code"`
 		Name string `json:"name"`
 		Type string `json:"type"`
 		MerchantFee Fee `json:"fee_merchant"`
 		CustomerFee Fee `json:"fee_customer"`
 		TotalFee Fee `json:"total_fee"`
 		Active bool `json:"active"`
-	} `json:"Data"`
+	} `json:"data,omitempty"`
 }
 
 //due to inconsistent fee data type we can't specify the type of data. the data type may will variant(string, int, float).
@@ -49,9 +49,9 @@ func (t *Tripay) GetChannel(code PaymentChannelCode)([]byte, error) {
 }
 type CostResponse struct{
 	Success bool `json:"success"`
-	Message string `json:"Message"`
+	Message string `json:"message"`
 	Data []struct{
-		Code string `json:"code"`
+		PaymentMethod PaymentChannelCode `json:"code"`
 		Name string `json:"name"`
 		Fee struct{
 			Flat interface{} `json:"flat"`
@@ -64,7 +64,7 @@ type CostResponse struct{
 			Customer int `json:"customer"`
 		} `json:"total_fee"`
 		Active bool `json:"active"`
-	} `json:"Data"`
+	} `json:"data,omitempty"`
 }
 /*
 GetCost used for calculating the payment fees. 
@@ -97,7 +97,7 @@ func (t *Tripay) GetCost(amount int,code PaymentChannelCode)([]byte, error) {
 
 type TransactionListResponse struct{
 	Success bool `json:"success"`
-	Message string `json:"Message"`
+	Message string `json:"message"`
 	Data []struct{
 		Reference string `json:"reference"`
 		MerchantRef string `json:"merchant_ref"`
@@ -132,7 +132,7 @@ type TransactionListResponse struct{
 		CreatedAt int `json:"created_at"`
 		ExpiredAt int `json:"expired_at"`
 		PaidAt int `json:"paid_at"`
-	} `json:"Data"`
+	} `json:"data,omitempty"`
 
 	Pagination struct{
 		Sort string `json:"sort"`
