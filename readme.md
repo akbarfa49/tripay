@@ -1,4 +1,4 @@
-Un-official Tripay Payment Gateway
+Tripay Unofficial Library
 ===============
 
 IMPORTANT: Make sure you read the documentation and understand what these methods are used for!
