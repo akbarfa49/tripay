@@ -11,22 +11,29 @@ go get github.com/akbarfa49/tripay
 
 ## Example
 ```GO
-t := tripay.New("your-apikey","your-private-key","your-merchant-code",tripay.Development);
+tr := tripay.New("your-apikey","your-private-key","your-merchant-code",tripay.Development);
+
+req := tripay.RequestTransaction{
+			PaymentMethod: tripay.BNIVA,
+			MerchantRef: "INV69",
+			Amount: 20000,
+			CustomerName: "akbarfa",
+			CustomerEmail: "fania@123.com",
+			CustomerPhone: "081234567891",
+			OrderItems: []tripay.Item{0: {Sku: "duar",Name: "duar",Price: 20000,Quantity: 1}},
+		}
+		b, err := tr.RequestClosedTransaction(req)
+		if err != nil {
+			log.Panic(err)
+			return
+		}
+		v:=tripay.ClosedTransactionResponse{}
+		if err := json.Unmarshal(b, &v); err != nil{
+			log.Panicln(err)
+		}
+		os.WriteFile("dump/requestclosed.json", b, 0644)
+    
 ```
-
-## Contents available
-content method available so far
-
-| Method  | Contents  | Status |
-|---|---|---|
-| `GetChannel(code PaymentChannelCode)` | `Channel Pembayaran` | OK |
-| `GetInstruction(instruction Insruction)` | `Instruksi Pembayaran` | OK |
-| `GetTransactionList(page,perPage int,channelCode PaymentChannelCode, sort, reference,merchantRef, status string)` | `Merchant List Pembayaran` | OK |
-| `GetCost(amount int, code PaymentChannelCode)` | `Kalkulator Biaya` | OK |
-| `RequestClosedTransaction(transaction RequestTransaction)` | `Close Transaksi` | OK |
-| `CallbackSignature` | `Callback` | OK |
-
-all response can retrieved by map[string]interface{} or from instance with suffix "Response"
 
 ## Testing
 
